@@ -1,4 +1,4 @@
-name: PR updater
+name: Keep PRs Updated
 description: Keep your pull requests up to date with base branch
 inputs:
   token:
