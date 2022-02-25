@@ -1,5 +1,7 @@
 # PR Updater
 
+Updated fork from [maxkomarychev](https://github.com/maxkomarychev).
+
 ## Quick start
 
 1. Create user token in [user settings](https://github.com/settings/tokens)
@@ -20,7 +22,7 @@
             steps:
             - uses: actions/checkout@v1
             - name: update all prs
-                uses: maxkomarychev/pr-updater-action@v1.0.0
+                uses: johncomposed/pr-updater-action@v1.0.2
                 with:
                     token: ${{ secrets.USER_TOKEN }}
     ```

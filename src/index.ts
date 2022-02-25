@@ -1,12 +1,12 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
-const token = core.getInput('token')
-const client = new github.GitHub(token)
-
 async function main() {
+    const token = core.getInput('token')
+    const client = github.getOctokit(token)
+
     const baseBranch = github.context.payload.ref
-    const pullsResponse = await client.pulls.list({
+    const pullsResponse = await client.rest.pulls.list({
         ...github.context.repo,
         base: baseBranch,
         state: 'open',
@@ -14,7 +14,7 @@ async function main() {
     const prs = pullsResponse.data
     await Promise.all(
         prs.map((pr) => {
-            client.pulls.updateBranch({
+            client.rest.pulls.updateBranch({
                 ...github.context.repo,
                 pull_number: pr.number,
             })
