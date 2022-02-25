@@ -1267,21 +1267,52 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.createBranch = void 0;
 const core = __importStar(__webpack_require__(470));
 const github = __importStar(__webpack_require__(469));
+const cleanRefs = str => str.replace('refs/heads/', '');
+function createBranch(client, context, branch) {
+    return __awaiter(this, void 0, void 0, function* () {
+        branch = cleanRefs(branch);
+        try {
+            yield client.rest.repos.getBranch(Object.assign(Object.assign({}, context.repo), { branch }));
+        }
+        catch (error) {
+            if (error.name === 'HttpError' && error.status === 404) {
+                yield client.rest.git.createRef(Object.assign({ ref: `refs/heads/${branch}`, sha: context.sha }, context.repo));
+            }
+            else {
+                throw Error(error);
+            }
+        }
+    });
+}
+exports.createBranch = createBranch;
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const token = core.getInput('token');
         const client = github.getOctokit(token);
         const baseBranch = github.context.payload.ref;
+        const tmpBranch = `${baseBranch}_${Date.now()}`;
+        if (!baseBranch || !tmpBranch)
+            throw new Error('No base branch found!?');
+        yield createBranch(client, github.context, tmpBranch);
+        core.info(`Updating to tmp branch ${tmpBranch}`);
         const pullsResponse = yield client.rest.pulls.list(Object.assign(Object.assign({}, github.context.repo), { base: baseBranch, state: 'open' }));
         const prs = pullsResponse.data;
-        yield Promise.all(prs.map((pr) => {
-            client.rest.pulls.updateBranch(Object.assign(Object.assign({}, github.context.repo), { pull_number: pr.number }));
-        }));
+        const results = yield Promise.allSettled(prs.map((pr) => __awaiter(this, void 0, void 0, function* () {
+            yield client.rest.pulls.update(Object.assign(Object.assign({}, github.context.repo), { pull_number: pr.number, base: cleanRefs(tmpBranch) }));
+            yield client.rest.pulls.update(Object.assign(Object.assign({}, github.context.repo), { pull_number: pr.number, base: cleanRefs(baseBranch) }));
+        })));
+        results.forEach(r => {
+            if (r.status === 'rejected')
+                core.warning(r.reason);
+        });
+        core.info(`Deleting tmp branch ${tmpBranch}`);
+        yield client.rest.git.deleteRef(Object.assign(Object.assign({}, github.context.repo), { ref: tmpBranch }));
     });
 }
-main();
+main().catch(e => core.setFailed(e.message));
 
 
 /***/ }),
