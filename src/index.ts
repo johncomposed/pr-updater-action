@@ -30,7 +30,7 @@ async function main() {
     const baseBranch = github.context.payload.ref
     const tmpBranch = `${baseBranch}_${Date.now()}`
 
-    if (!baseBranch || !tmpBranch) throw new Error('No base branch found!?');
+    if (!baseBranch || !tmpBranch || !cleanRefs(tmpBranch)) throw new Error('No base branch found!?');
 
     await createBranch(client, github.context, tmpBranch)
     core.info(`Updating to tmp branch ${tmpBranch}`)
@@ -64,7 +64,7 @@ async function main() {
     core.info(`Deleting tmp branch ${tmpBranch}`)
     await client.rest.git.deleteRef({
         ...github.context.repo,
-        ref: tmpBranch,
+        ref: `heads/${cleanRefs(tmpBranch)}`,
     })
 }
 

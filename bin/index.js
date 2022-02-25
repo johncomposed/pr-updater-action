@@ -1294,7 +1294,7 @@ function main() {
         const client = github.getOctokit(token);
         const baseBranch = github.context.payload.ref;
         const tmpBranch = `${baseBranch}_${Date.now()}`;
-        if (!baseBranch || !tmpBranch)
+        if (!baseBranch || !tmpBranch || !cleanRefs(tmpBranch))
             throw new Error('No base branch found!?');
         yield createBranch(client, github.context, tmpBranch);
         core.info(`Updating to tmp branch ${tmpBranch}`);
@@ -1309,7 +1309,7 @@ function main() {
                 core.warning(r.reason);
         });
         core.info(`Deleting tmp branch ${tmpBranch}`);
-        yield client.rest.git.deleteRef(Object.assign(Object.assign({}, github.context.repo), { ref: tmpBranch }));
+        yield client.rest.git.deleteRef(Object.assign(Object.assign({}, github.context.repo), { ref: `heads/${cleanRefs(tmpBranch)}` }));
     });
 }
 main().catch(e => core.setFailed(e.message));
