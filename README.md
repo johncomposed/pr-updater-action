@@ -14,17 +14,17 @@ Updated fork from [maxkomarychev](https://github.com/maxkomarychev).
     on:
         push:
             branches: 
-                - master
+                - develop
 
     jobs:
         autoupdate:
             runs-on: ubuntu-latest
             steps:
-            - uses: actions/checkout@v1
-            - name: update all prs
-                uses: johncomposed/pr-updater-action@v1.0.2
+            - uses: actions/checkout@v2
+            -   name: update all prs
+                uses: johncomposed/pr-updater-action@v1.0.3
                 with:
-                    token: ${{ secrets.USER_TOKEN }}
+                    token: ${{ secrets.GITHUB_TOKEN }}
     ```
 
 4. Now every time code is pushed to branches specified in the workflow all other

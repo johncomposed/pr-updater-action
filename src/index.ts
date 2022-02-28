@@ -12,7 +12,8 @@ async function main() {
         state: 'open',
     })
     const prs = pullsResponse.data
-    await Promise.all(
+
+    const results = await Promise.allSettled(
         prs.map((pr) => {
             client.rest.pulls.updateBranch({
                 ...github.context.repo,
@@ -20,6 +21,10 @@ async function main() {
             })
         }),
     )
+
+    results.forEach((r) => {
+        if (r.status === 'rejected') core.warning(r.reason)
+    })
 }
 
 main()
